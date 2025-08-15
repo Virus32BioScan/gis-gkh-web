@@ -8,15 +8,15 @@
 ## Быстрый старт
 ```bash
 pip install -r requirements.txt
-uvicorn app.main:app --host 0.0.0.0 --port 8003
+uvicorn app.main:app --host 0.0.0.0 --port 8080
 ```
-Открой `http://127.0.0.1:8003`.
+Открой `http://127.0.0.1:8080`.
 
 Переменные окружения (при необходимости):
 ```
 GIS_TARGET_HOST=api.dom.gosuslugi.ru
 GIS_STUNNEL_HOST=127.0.0.1
-GIS_STUNNEL_PORT=7443
+GIS_STUNNEL_PORT=8080
 GIS_SOAP11=0  # 1 для SOAP 1.1
 ```
 
