@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+jinja2
+requests
+lxml
+pywin32; sys_platform == "win32"

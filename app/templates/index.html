@@ -1,0 +1,76 @@
+<!-- app/templates/index.html -->
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <title>ГИС ЖКХ — Мини UI</title>
+  <link rel="stylesheet" href="/static/css/main.css"/>
+</head>
+<body>
+<header><h1>ГИС ЖКХ — Мини UI</h1></header>
+<main>
+  <section class="card">
+    <h2>1) Сборка exportOrgRegistry</h2>
+    <label>OGRN <input id="ogrn" value="5137746125798"/></label>
+    <button onclick="build()">Собрать Envelope</button>
+    <textarea id="xml" rows="10" placeholder="Envelope"></textarea>
+  </section>
+
+  <section class="card">
+    <h2>2) Подпись</h2>
+    <details>
+      <summary>Клиентская (CryptoPro Extension в браузере)</summary>
+      <div class="row">
+        <button id="btnList" onclick="uiCadesRefresh()">Обновить сертификаты</button>
+        <select id="cades_thumb"></select>
+      </div>
+      <button onclick="uiCadesSign()">Подписать в браузере</button>
+      <textarea id="signed" rows="10" placeholder="Подписанный Envelope"></textarea>
+    </details>
+    <details>
+      <summary>Серверная (COM CAdESCOM — опционально)</summary>
+      <label>Thumbprint <input id="thumb" placeholder="SHA1 без пробелов"/></label>
+      <button onclick="signServer()">Подписать на сервере</button>
+    </details>
+  </section>
+
+  <section class="card">
+    <h2>3) Отправка через stunnel</h2>
+    <label>Endpoint path <input id="endpoint" value="/ext-bus-organization-service/services/OrgRegistryAsync"/></label>
+    <label><input type="checkbox" id="soap11"/> SOAP 1.1 (укажите SOAPAction при необходимости)</label>
+    <label>SOAPAction <input id="soapAction" placeholder="опционально"/></label>
+    <button onclick="sendReq()">Отправить</button>
+    <textarea id="resp" rows="12" placeholder="Ответ сервера"></textarea>
+  </section>
+</main>
+<script src="/static/js/cades.js"></script>
+<script>
+async function build(){
+  const r = await fetch('/api/build/export-org-registry', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ogrn: document.getElementById('ogrn').value.trim()})
+  });
+  document.getElementById('xml').value = await r.text();
+}
+async function signServer(){
+  const r = await fetch('/api/sign/server', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({thumbprint: document.getElementById('thumb').value.trim(), xml: document.getElementById('xml').value})
+  });
+  if(!r.ok){ const e=await r.json(); alert('Ошибка: '+e.detail); return; }
+  document.getElementById('signed').value = await r.text();
+}
+async function sendReq(){
+  const xml = document.getElementById('signed').value || document.getElementById('xml').value;
+  const body = {
+    endpoint_path: document.getElementById('endpoint').value.trim(),
+    xml: xml,
+    soap11: document.getElementById('soap11').checked,
+    soap_action: document.getElementById('soapAction').value.trim() || null
+  };
+  const r = await fetch('/api/send', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  document.getElementById('resp').value = await r.text();
+}
+</script>
+</body>
+</html>
